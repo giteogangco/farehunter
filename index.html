@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FareHunter — cheapest-fare deep search</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+:root{
+  --bg:#0B1220; --panel:#121C30; --panel2:#18233C; --line:#27345A;
+  --amber:#F5B544; --teal:#46D6C3; --coral:#FF6B5E;
+  --ink:#EAF0FC; --muted:#8595B8;
+  --disp:'Space Grotesk',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:radial-gradient(1200px 600px at 80% -10%, #16213d 0%, var(--bg) 55%) no-repeat,var(--bg);
+  color:var(--ink);font-family:var(--disp);min-height:100vh;}
+.wrap{max-width:1080px;margin:0 auto;padding:18px;}
+svg{display:block;}
+code{font-family:var(--mono);color:var(--teal);font-size:.9em;}
+
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.brand{display:flex;gap:11px;align-items:center;}
+.logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,var(--amber),#e09a1f);color:#1a1205;}
+.name{font-weight:700;letter-spacing:.14em;font-size:15px;}
+.sub{font-size:11px;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;}
+.banner{font-size:12px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:7px 11px;border-radius:8px;display:flex;gap:7px;align-items:center;}
+.banner b{color:var(--ink);}
+.banner.live{border-color:var(--teal);color:var(--teal);}
+
+.console{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;}
+.route{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field>span{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.in{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:11px 12px;font-family:var(--mono);font-size:15px;outline:none;}
+.in:focus-visible{border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,181,68,.22);}
+.code{width:84px;letter-spacing:.18em;text-align:center;font-weight:600;text-transform:uppercase;}
+.swap{align-self:flex-end;margin-bottom:4px;background:var(--panel2);border:1px solid var(--line);color:var(--amber);width:38px;height:42px;border-radius:10px;cursor:pointer;display:grid;place-items:center;}
+.swap:hover{border-color:var(--amber);}
+.step{display:flex;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+.step button{background:none;border:none;color:var(--ink);width:36px;height:42px;font-size:18px;cursor:pointer;}
+.step button:hover{background:var(--line);}
+.step span{font-family:var(--mono);min-width:42px;text-align:center;font-size:14px;}
+
+.toggles{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;align-items:center;}
+.tog{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);padding:9px 13px;border-radius:999px;font-size:13px;cursor:pointer;font-family:var(--disp);}
+.tog .dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--muted);transition:.15s;}
+.tog.on{color:var(--ink);border-color:var(--teal);}
+.tog.on .dot{background:var(--teal);border-color:var(--teal);}
+.hunt{margin-left:auto;display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,var(--amber),#e0991d);color:#1a1205;border:none;font-weight:700;font-family:var(--disp);padding:12px 22px;border-radius:11px;cursor:pointer;font-size:15px;}
+.hunt:hover{filter:brightness(1.05);}
+.hunt:disabled{opacity:.7;cursor:wait;}
+.spin{width:15px;height:15px;border:2px solid #1a120555;border-top-color:#1a1205;border-radius:50%;animation:sp .7s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.board{margin-top:18px;background:linear-gradient(180deg,#0e1830,#0a1124);border:1px solid var(--line);border-radius:16px;padding:22px;text-align:center;}
+.board-tag{font-size:12px;color:var(--teal);letter-spacing:.12em;text-transform:uppercase;display:inline-flex;gap:7px;align-items:center;}
+.flap{display:flex;gap:4px;justify-content:center;margin:14px 0 10px;flex-wrap:wrap;}
+.flap-c{font-family:var(--mono);font-weight:600;font-size:clamp(30px,7vw,52px);background:#070d1c;border:1px solid #1f2c4d;border-radius:7px;padding:6px 8px;min-width:34px;color:var(--amber);box-shadow:inset 0 -10px 14px #00000055;animation:flap .4s ease both;}
+@keyframes flap{from{transform:rotateX(-90deg);opacity:0}to{transform:rotateX(0);opacity:1}}
+.board-strat{color:var(--muted);font-size:13px;display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;}
+.pill{background:rgba(70,214,195,.14);color:var(--teal);font-size:11px;padding:3px 9px;border-radius:999px;}
+
+.grid{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:15px;border-left:3px solid var(--line);}
+.card .ic{margin-bottom:8px;}
+.card h3{margin:0 0 5px;font-size:14px;}
+.card p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5;}
+.tone-amber{border-left-color:var(--amber);} .tone-amber .ic{color:var(--amber);}
+.tone-teal{border-left-color:var(--teal);} .tone-teal .ic{color:var(--teal);}
+.tone-coral{border-left-color:var(--coral);} .tone-coral .ic{color:var(--coral);}
+.tone-muted .ic{color:var(--muted);}
+
+.panel{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;}
+.panel-h{display:flex;gap:8px;align-items:center;font-weight:700;font-size:14px;margin-bottom:14px;}
+.dim{color:var(--muted);font-weight:500;font-size:12px;}
+
+.cal{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px;}
+.day{position:relative;border:1px solid var(--line);border-radius:9px;padding:8px 6px;cursor:pointer;background:color-mix(in srgb, var(--teal) calc((1 - var(--t)) * 26%), var(--panel2));color:var(--ink);text-align:center;font-family:var(--disp);transition:.12s;}
+.day:hover{border-color:var(--amber);}
+.day.sel{outline:2px solid var(--amber);outline-offset:1px;}
+.day.min{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal);}
+.day-d{display:block;font-size:11px;color:var(--muted);}
+.day-p{display:block;font-family:var(--mono);font-size:13px;font-weight:600;margin-top:3px;}
+.day-flag{position:absolute;top:4px;right:6px;color:var(--coral);font-weight:700;font-family:var(--mono);}
+.legend{margin-top:11px;font-size:11px;color:var(--muted);display:flex;gap:8px;align-items:center;}
+.legend .sw{width:13px;height:13px;border-radius:3px;display:inline-block;}
+.legend .cheap{background:var(--teal);} .legend .dear{background:var(--panel2);border:1px solid var(--line);}
+
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.plan{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:15px;}
+.plan.win{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal);}
+.plan-tag{position:absolute;top:-9px;left:14px;background:var(--teal);color:#04201c;font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.08em;text-transform:uppercase;}
+.plan h4{margin:0 0 8px;font-size:13px;}
+.plan-total{font-family:var(--mono);font-size:26px;font-weight:600;color:var(--amber);}
+.plan-total span{font-family:var(--disp);font-size:11px;color:var(--muted);margin-left:6px;}
+.plan dl{margin:12px 0 0;display:flex;flex-direction:column;gap:7px;}
+.plan dl>div{display:flex;justify-content:space-between;gap:10px;font-size:12px;border-top:1px solid var(--line);padding-top:7px;}
+.plan dt{color:var(--muted);} .plan dd{margin:0;text-align:right;}
+
+.near{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;}
+.near-cell{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:13px;}
+.near-cell.best{border-color:var(--teal);}
+.near-code{font-family:var(--mono);font-weight:600;letter-spacing:.1em;}
+.near-code span{font-family:var(--disp);font-size:11px;color:var(--muted);letter-spacing:0;margin-left:5px;}
+.near-price{font-family:var(--mono);font-size:20px;color:var(--amber);margin:6px 0 2px;}
+.near-note{font-size:11px;color:var(--muted);}
+
+.real p{font-size:13px;color:var(--muted);line-height:1.6;margin:0 0 10px;}
+.real ul{margin:0 0 12px;padding-left:18px;font-size:13px;line-height:1.7;}
+.real li b{color:var(--teal);}
+.warn{display:flex;gap:8px;align-items:flex-start;background:rgba(255,107,94,.1);border:1px solid rgba(255,107,94,.3);color:#ffb6ad;padding:10px 12px;border-radius:9px;font-size:12.5px;}
+.warn svg{flex-shrink:0;margin-top:2px;}
+
+.foot{text-align:center;color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin:22px 0 4px;}
+
+@media(max-width:640px){
+  .compare{grid-template-columns:1fr;}
+  .hunt{margin-left:0;width:100%;justify-content:center;}
+  .banner{order:3;}
+}
+@media(prefers-reduced-motion:reduce){ .flap-c,.spin{animation:none;} }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ============================================================
+   FAREHUNTER — standalone, no build step.
+   Demo prices are simulated. To search REAL fares, set CONFIG
+   below and deploy the included amadeus-proxy.js.
+   ============================================================ */
+const CONFIG = {
+  mode: "demo",            // "demo" | "live"
+  proxyUrl: "/api/fares",  // relative works once deployed on Vercel; or an absolute URL
+};
+
+/* ---------- seeded RNG (stable demo prices per route/date) ---------- */
+function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function mulberry32(a){return function(){a|=0;a=(a+0x6d2b79f5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
+
+const METROS={
+  JFK:["JFK","EWR","LGA"],EWR:["JFK","EWR","LGA"],LGA:["JFK","EWR","LGA"],
+  LHR:["LHR","LGW","STN","LTN"],LGW:["LHR","LGW","STN","LTN"],STN:["LHR","LGW","STN","LTN"],
+  LAX:["LAX","BUR","LGB","SNA"],BUR:["LAX","BUR","LGB","SNA"],SNA:["LAX","BUR","LGB","SNA"],
+  SFO:["SFO","OAK","SJC"],OAK:["SFO","OAK","SJC"],SJC:["SFO","OAK","SJC"],
+  ORD:["ORD","MDW"],MDW:["ORD","MDW"],NRT:["NRT","HND"],HND:["NRT","HND"],
+  CDG:["CDG","ORY","BVA"],ORY:["CDG","ORY","BVA"]
+};
+const CITY={JFK:"New York",EWR:"Newark",LGA:"New York",LHR:"London",LGW:"London",STN:"London",LTN:"London",
+  LAX:"Los Angeles",BUR:"Burbank",LGB:"Long Beach",SNA:"Santa Ana",SFO:"San Francisco",OAK:"Oakland",
+  SJC:"San Jose",ORD:"Chicago",MDW:"Chicago",NRT:"Tokyo",HND:"Tokyo",CDG:"Paris",ORY:"Paris",BVA:"Beauvais",
+  DXB:"Dubai",SIN:"Singapore",BKK:"Bangkok",BCN:"Barcelona",AMS:"Amsterdam",MAD:"Madrid",FCO:"Rome",IST:"Istanbul",DEL:"Delhi",SYD:"Sydney"};
+const KNOWN=Object.keys(CITY);
+const CARRIERS=[
+  {code:"QZ",name:"Skylark",kind:"budget",bag:55,seat:18},
+  {code:"VN",name:"Vanta Air",kind:"budget",bag:48,seat:14},
+  {code:"AR",name:"Arcadia",kind:"legacy",bag:0,seat:0},
+  {code:"MD",name:"Meridian",kind:"legacy",bag:0,seat:9},
+  {code:"NX",name:"Nimbus",kind:"hybrid",bag:30,seat:12}
+];
+const fmt=n=>"$"+Math.round(n).toLocaleString();
+const dayName=d=>["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()];
+const iso=d=>d.toISOString().slice(0,10);
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;};
+
+function oneWay(o,dest,date,c){
+  const seed=hashStr(o+dest);
+  const rnd=mulberry32(seed+hashStr(iso(date))+hashStr(c.code))();
+  const anchor=70+(seed%560);
+  const dow=date.getDay();
+  const dowMult=[1.18,0.92,0.86,0.88,1.0,1.22,1.1][dow];
+  const season=1+0.12*Math.sin((date.getDate()/31)*Math.PI*2);
+  const kindMult=c.kind==="budget"?0.74:c.kind==="hybrid"?0.88:1.0;
+  const noise=0.85+rnd*0.4;
+  let p=anchor*dowMult*season*kindMult*noise;
+  const mistake=mulberry32(seed+hashStr(iso(date))*7)()>0.985;
+  if(mistake)p*=0.45;
+  return{price:p,mistake,stops:rnd>0.55?1:0,dep:c};
+}
+function cheapestOneWay(o,d,date){let b=null;for(const c of CARRIERS){const f=oneWay(o,d,date,c);if(!b||f.price<b.price)b=f;}return b;}
+
+function fetchFaresDemo(q){
+  const origins=q.nearby?(METROS[q.from]||[q.from]):[q.from];
+  const dests=q.nearby?(METROS[q.to]||[q.to]):[q.to];
+  const depart=new Date(q.depart+"T00:00:00");
+  const ret=addDays(depart,q.tripLen);
+  const calendar=Array.from({length:30},(_,i)=>{const d=addDays(depart,i-3);const b=cheapestOneWay(q.from,q.to,d);return{date:d,price:b.price,mistake:b.mistake};});
+  let bestPair=null;
+  for(const o of origins)for(const d of dests){
+    const out=cheapestOneWay(o,d,depart);
+    const back=q.roundTrip?cheapestOneWay(d,o,ret):{price:0,dep:out.dep,stops:0,mistake:false};
+    const total=out.price+back.price;
+    if(!bestPair||total<bestPair.total)bestPair={o,d,out,back,total};
+  }
+  const{o,d,out,back}=bestPair;
+  let singleCarrier=null;
+  for(const c of CARRIERS){
+    const ro=oneWay(o,d,depart,c);
+    const rb=q.roundTrip?oneWay(d,o,ret,c):{price:0};
+    const t=(ro.price+rb.price)*(q.roundTrip?0.93:1);
+    if(!singleCarrier||t<singleCarrier.total)singleCarrier={carrier:c,out:ro,back:rb,total:t};
+  }
+  const split={out,back,total:bestPair.total,carrierOut:out.dep,carrierBack:back.dep};
+  const trueCost=(plan,cO,cB)=>{const extras=q.checkedBag?((cO.bag+cO.seat)+(q.roundTrip?cB.bag+cB.seat:0)):0;return(plan.total+extras)*q.pax;};
+  const splitTrue=trueCost(split,split.carrierOut,split.carrierBack);
+  const singleTrue=trueCost(singleCarrier,singleCarrier.carrier,singleCarrier.carrier);
+  const winner=splitTrue<=singleTrue?{kind:"split",total:splitTrue,data:split}:{kind:"single",total:singleTrue,data:singleCarrier};
+  return{calendar,bestPair,singleCarrier,split,splitTrue,singleTrue,winner,depart,ret,live:false};
+}
+
+/* ---------- live path: calls your deployed proxy, then adapts ----------
+   Proxy returns:
+     { pairs:[{origin,dest,roundTrip,carrier}], best:{origin,dest},
+       roundTrip:{total,carrier}, split:{out:{price,carrier},back:{price,carrier},total},
+       cheapestDates:[{date,price}] }
+   We map real values onto the result skeleton so every panel runs on live data. */
+async function fetchLive(q){
+  const origins=q.nearby?(METROS[q.from]||[q.from]):[q.from];
+  const dests=q.nearby?(METROS[q.to]||[q.to]):[q.to];
+  const u=new URL(CONFIG.proxyUrl, location.href);
+  u.searchParams.set("origins",origins.join(","));
+  u.searchParams.set("dests",dests.join(","));
+  u.searchParams.set("depart",q.depart);
+  if(q.roundTrip) u.searchParams.set("return",iso(addDays(new Date(q.depart+"T00:00:00"),q.tripLen)));
+  u.searchParams.set("adults",q.pax);
+  const res=await fetch(u); if(!res.ok) throw new Error("proxy "+res.status);
+  const d=await res.json(); if(d.error) throw new Error(d.error);
+
+  const r=fetchFaresDemo(q);          // structural skeleton (shape only)
+  r.live=true; r.liveNote="Live fares from Amadeus.";
+  const legs=q.roundTrip?2:1;
+  const bagEach=q.checkedBag?55:0;    // Amadeus basic offers don't itemise bags — flat estimate
+
+  if(d.cheapestDates&&d.cheapestDates.length){
+    const m=new Map(d.cheapestDates.map(x=>[x.date,x.price]));
+    r.calendar=r.calendar.map(c=>m.has(iso(c.date))?{...c,price:m.get(iso(c.date)),mistake:false}:c);
+  }
+  if(d.best){r.bestPair.o=d.best.origin;r.bestPair.d=d.best.dest;}
+  if(d.pairs&&d.pairs.length)r.pairs=d.pairs;
+
+  if(d.roundTrip&&d.roundTrip.total!=null){
+    r.singleCarrier.total=d.roundTrip.total;
+    r.singleCarrier.carrier={...r.singleCarrier.carrier,name:d.roundTrip.carrier||"Airline"};
+    r.singleTrue=(d.roundTrip.total+bagEach*legs)*q.pax;
+  }
+  if(d.split&&d.split.total!=null){
+    r.split.total=d.split.total;
+    r.split.out={...r.split.out,price:d.split.out.price,dep:{...r.split.out.dep,name:d.split.out.carrier||"Airline"}};
+    r.split.back={...r.split.back,price:d.split.back.price,dep:{...r.split.back.dep,name:d.split.back.carrier||"Airline"}};
+    r.split.carrierOut={...r.split.carrierOut,name:d.split.out.carrier||"Airline"};
+    r.split.carrierBack={...r.split.carrierBack,name:d.split.back.carrier||"Airline"};
+    r.splitTrue=(d.split.total+bagEach*legs)*q.pax;
+  }
+  r.winner=r.splitTrue<=r.singleTrue
+    ?{kind:"split",total:r.splitTrue,data:r.split}
+    :{kind:"single",total:r.singleTrue,data:r.singleCarrier};
+  if(q.checkedBag)r.liveNote="Live fares from Amadeus · checked-bag fee is a flat $55/leg estimate (basic offers don't itemise bags).";
+  return r;
+}
+async function fetchFares(q){
+  if(CONFIG.mode==="live"&&CONFIG.proxyUrl){
+    try{return await fetchLive(q);}catch(e){console.warn("Live fetch failed; using demo.",e);}
+  }
+  return fetchFaresDemo(q);
+}
+
+function buildInsights(r,q){
+  const out=[];const cal=r.calendar;
+  const cheap=cal.reduce((a,b)=>b.price<a.price?b:a,cal[0]);
+  const chosen=cal.find(c=>iso(c.date)===q.depart)||cal[3];
+  const save=chosen.price-cheap.price;
+  if(save>12)out.push({icon:"calendar",tone:"amber",title:`Shift to ${dayName(cheap.date)} ${cheap.date.getDate()}`,body:`Departing that day instead drops the one-way base by about ${fmt(save)} per person.`});
+  const diff=Math.abs(r.splitTrue-r.singleTrue);
+  if(r.winner.kind==="split"&&diff>8)out.push({icon:"repeat",tone:"teal",title:"Two one-ways beat the round-trip",body:`Booking outbound and return on separate carriers saves about ${fmt(diff)} vs one bundled ticket. Trade-off: a missed first leg won't protect the second.`});
+  if(r.winner.kind==="single")out.push({icon:"repeat",tone:"teal",title:"Stay on one ticket here",body:`The bundled round-trip is about ${fmt(diff)} cheaper and keeps both legs protected — splitting wouldn't pay off this time.`});
+  if(q.nearby&&r.bestPair&&(r.bestPair.o!==q.from||r.bestPair.d!==q.to))out.push({icon:"mappin",tone:"amber",title:`Use ${r.bestPair.o} → ${r.bestPair.d}`,body:`A nearby-airport pairing prices lower than your exact ${q.from} → ${q.to} search.`});
+  if(!q.checkedBag)out.push({icon:"luggage",tone:"muted",title:"Headline price hides bag fees",body:"Turn on ‘checked bag’ — budget carriers often lose their lead once a $48–55 bag is added each way."});
+  const anyMistake=cal.some(c=>c.mistake)||r.split.out.mistake;
+  if(anyMistake&&!r.live)out.push({icon:"zap",tone:"coral",title:"Possible mistake fare flagged",body:"One date prices far below the route's floor — these vanish fast and airlines sometimes void them. Book refundable or fast."});
+  return out;
+}
+
+/* ---------- icons ---------- */
+const ICONS={
+  plane:'<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  swap:'<path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/>',
+  calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  trend:'<path d="M22 17 13.5 8.5 8.5 13.5 2 7"/><path d="M16 17h6v-6"/>',
+  mappin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  repeat:'<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+  luggage:'<rect x="6" y="7" width="12" height="14" rx="2"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3M10 21v1M14 21v1"/>',
+  info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  sparkles:'<path d="M12 3l1.9 5.8L19.7 10l-5.8 1.9L12 17.7l-1.9-5.8L4.3 10l5.8-1.2z"/>',
+  alert:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+  zap:'<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>'
+};
+function icon(name,size){const s=size||16;const span=document.createElement("span");span.style.display="inline-flex";
+  span.innerHTML=`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||""}</svg>`;return span;}
+
+/* ---------- tiny DOM helper ---------- */
+function h(tag,props){const el=document.createElement(tag);const kids=[].slice.call(arguments,2);
+  if(props)for(const k in props){const v=props[k];if(v==null)continue;
+    if(k==="class")el.className=v;else if(k==="html")el.innerHTML=v;
+    else if(k.slice(0,2)==="on")el.addEventListener(k.slice(2).toLowerCase(),v);
+    else el.setAttribute(k,v);}
+  kids.flat().forEach(c=>{if(c==null||c===false)return;el.append(c.nodeType?c:document.createTextNode(c));});
+  return el;}
+
+/* ---------- state ---------- */
+let q={from:"JFK",to:"LHR",depart:iso(addDays(new Date(),21)),tripLen:7,pax:1,roundTrip:true,nearby:true,checkedBag:false};
+let result=null,searching=false;
+const set=(k,v)=>{q[k]=v;};
+
+async function run(){searching=true;render();result=await fetchFares(q);searching=false;render();
+  setTimeout(()=>document.getElementById("board")?.scrollIntoView({behavior:"smooth",block:"start"}),60);}
+
+/* ---------- render ---------- */
+function field(label,node,hide){if(hide)return null;return h("label",{class:"field"},h("span",null,label),node);}
+function stepper(val,onMinus,onPlus,label){
+  return h("div",{class:"step"},
+    h("button",{onClick:onMinus,"aria-label":"decrease "+label},"−"),
+    h("span",null,val),
+    h("button",{onClick:onPlus,"aria-label":"increase "+label},"+"));}
+function toggle(on,k,label){
+  return h("button",{class:"tog"+(on?" on":""),role:"switch","aria-checked":on,onClick:()=>{set(k,!on);render();}},
+    h("span",{class:"dot"}),label);}
+
+function consoleEl(){
+  const fromIn=h("input",{class:"in code",value:q.from,list:"apts",maxlength:3,"aria-label":"origin",
+    onInput:e=>{set("from",e.target.value.toUpperCase().slice(0,3));}});
+  const toIn=h("input",{class:"in code",value:q.to,list:"apts",maxlength:3,"aria-label":"destination",
+    onInput:e=>{set("to",e.target.value.toUpperCase().slice(0,3));}});
+  const dateIn=h("input",{class:"in",type:"date",value:q.depart,onInput:e=>{set("depart",e.target.value);}});
+  const dl=h("datalist",{id:"apts"});KNOWN.forEach(c=>dl.append(h("option",{value:c},c+" — "+CITY[c])));
+  return h("section",{class:"console","aria-label":"Search fares"},
+    h("div",{class:"route"},
+      field("From",fromIn),
+      h("button",{class:"swap",onClick:()=>{const t=q.from;set("from",q.to);set("to",t);render();},"aria-label":"swap"},icon("swap")),
+      field("To",toIn),dl,
+      field("Depart",dateIn),
+      field("Trip length",stepper(q.tripLen+"n",()=>{set("tripLen",Math.max(1,q.tripLen-1));render();},()=>{set("tripLen",q.tripLen+1);render();},"nights"),!q.roundTrip),
+      field("Travellers",stepper(q.pax,()=>{set("pax",Math.max(1,q.pax-1));render();},()=>{set("pax",q.pax+1);render();},"travellers"))
+    ),
+    h("div",{class:"toggles"},
+      toggle(q.roundTrip,"roundTrip","Round trip"),
+      toggle(q.nearby,"nearby","Include nearby airports"),
+      toggle(q.checkedBag,"checkedBag","Need a checked bag"),
+      h("button",{class:"hunt",onClick:run,disabled:searching||undefined},
+        searching?h("span",{class:"spin"}):icon("search"),searching?"Hunting…":"Hunt fares")
+    ));
+}
+
+function flap(value){const str=("$"+value.toLocaleString()).split("");
+  const wrap=h("div",{class:"flap","aria-label":"$"+value});str.forEach(ch=>wrap.append(h("span",{class:"flap-c"},ch)));return wrap;}
+
+function resultsEl(){
+  if(!result)return null;
+  const r=result;const frag=document.createDocumentFragment();
+  // board
+  const strat=h("div",{class:"board-strat"},
+    "via "+(r.winner.kind==="split"?"split ticketing":"single carrier")+" · "+r.bestPair.o+" → "+r.bestPair.d,
+    r.bestPair.o!==q.from?h("span",{class:"pill"},"nearby airport"):null);
+  frag.append(h("section",{class:"board",id:"board","aria-live":"polite"},
+    h("div",{class:"board-tag"},icon("trend",14),"cheapest realistic total · "+q.pax+" traveller"+(q.pax>1?"s":"")+(q.roundTrip?" · round trip":" · one way")),
+    flap(Math.round(r.winner.total)),strat));
+  if(r.liveNote)frag.append(h("section",{class:"panel"},h("p",{class:"dim",style:"margin:0"},r.liveNote)));
+  // insights
+  const grid=h("section",{class:"grid"});
+  buildInsights(r,q).forEach(it=>grid.append(h("article",{class:"card tone-"+it.tone},
+    h("span",{class:"ic"},icon(it.icon,18)),h("h3",null,it.title),h("p",null,it.body))));
+  frag.append(grid);
+  // calendar
+  const prices=r.calendar.map(c=>c.price);const mn=Math.min(...prices),mx=Math.max(...prices);
+  const cal=h("div",{class:"cal"});
+  r.calendar.forEach(c=>{const t=(c.price-mn)/((mx-mn)||1);const sel=iso(c.date)===q.depart;const min=c.price===mn;
+    cal.append(h("button",{class:"day"+(sel?" sel":"")+(min?" min":""),style:"--t:"+t,title:dayName(c.date)+" "+c.date.getDate()+" — "+fmt(c.price),
+      onClick:()=>{set("depart",iso(c.date));run();}},
+      h("span",{class:"day-d"},dayName(c.date)+" "+c.date.getDate()),
+      h("span",{class:"day-p"},fmt(c.price)),
+      c.mistake?h("span",{class:"day-flag"},"!"):null));});
+  frag.append(h("section",{class:"panel"},
+    h("div",{class:"panel-h"},icon("calendar",15),"Cheapest day to fly out ",h("span",{class:"dim"},"— base one-way, ±window")),
+    cal,
+    h("div",{class:"legend"},h("span",{class:"sw cheap"}),"cheaper",h("span",{class:"sw dear"}),"pricier · tap a day to re-price")));
+  // compare
+  const planEl=(title,total,rows,win)=>{const p=h("div",{class:"plan"+(win?" win":"")});
+    if(win)p.append(h("span",{class:"plan-tag"},"cheaper"));
+    p.append(h("h4",null,title),h("div",{class:"plan-total"},fmt(total),h("span",null,"total · "+q.pax+" pax")));
+    const dl=h("dl");rows.forEach(([k,v])=>dl.append(h("div",null,h("dt",null,k),h("dd",null,v))));p.append(dl);return p;};
+  const singleBags=q.checkedBag?fmt(r.singleTrue/q.pax-r.singleCarrier.total):"—";
+  const splitBags=q.checkedBag?fmt(r.splitTrue/q.pax-r.split.total):"—";
+  frag.append(h("section",{class:"panel"},
+    h("div",{class:"panel-h"},icon("repeat",15),"Round trip vs split ticket ",h("span",{class:"dim"},"— true cost incl. bags & seats")),
+    h("div",{class:"compare"},
+      planEl("Single carrier round-trip",r.singleTrue,[["Carrier",r.singleCarrier.carrier.name],["Base fare",fmt(r.singleCarrier.total)],["Bags + seats",singleBags],["Protection","Both legs on one ticket"]],r.winner.kind==="single"),
+      planEl("Split: two separate one-ways",r.splitTrue,[["Out / back",r.split.carrierOut.name+" · "+r.split.carrierBack.name],["Base fare",fmt(r.split.total)],["Bags + seats",splitBags],["Protection","Legs independent — riskier"]],r.winner.kind==="split"))));
+  // nearby
+  if(q.nearby){
+    let list;
+    if(r.pairs&&r.pairs.length){
+      list=r.pairs.map(p=>({code:p.origin,sub:CITY[p.origin]||p.dest,price:p.roundTrip,
+        best:p.origin===r.bestPair.o&&p.dest===r.bestPair.d,note:p.origin+"→"+p.dest}));
+    }else{
+      list=(METROS[q.from]||[q.from]).slice(0,4).map(o=>{const f=cheapestOneWay(o,r.bestPair.d,r.depart);
+        return{code:o,sub:CITY[o]||"",price:f.price,best:o===r.bestPair.o,note:o===r.bestPair.o?"best origin":"outbound one-way"};});
+    }
+    const near=h("div",{class:"near"});
+    list.forEach(it=>near.append(h("div",{class:"near-cell"+(it.best?" best":"")},
+      h("div",{class:"near-code"},it.code,h("span",null,it.sub)),
+      h("div",{class:"near-price"},fmt(it.price)),
+      h("div",{class:"near-note"},it.best?"best option":it.note))));
+    frag.append(h("section",{class:"panel"},h("div",{class:"panel-h"},icon("mappin",15),"Airport alternatives"),near));
+  }
+  // make it real
+  const ul=h("ul");
+  [["Amadeus Self-Service","generous free tier; flight-offers + cheapest-date search (used by the included proxy)."],
+   ["Kiwi / Tequila API","strongest for split-ticket & nearby-airport combos."],
+   ["Duffel","clean modern API with real bookable offers."]].forEach(([b,t])=>ul.append(h("li",null,h("b",null,b)," — "+t)));
+  frag.append(h("section",{class:"panel real"},
+    h("div",{class:"panel-h"},icon("sparkles",15),"Make it search live fares"),
+    h("p",{html:"Set <code>CONFIG.mode = 'live'</code> at the top of this file, then deploy this folder to Vercel — the included <code>api/fares.js</code> runs split-ticket, nearby-airport and cheapest-date searches server-side, keeping your API key off the page and dodging browser CORS."}),
+    ul,
+    h("div",{class:"warn"},icon("alert",13),h("span",null,"Split tickets and hidden-city tricks can break airline rules and aren't protected if a leg is missed — surface the risk, don't hide it."))));
+  return frag;
+}
+
+function render(){
+  const app=document.getElementById("app");app.innerHTML="";
+  const live=CONFIG.mode==="live"&&CONFIG.proxyUrl;
+  app.append(
+    h("header",{class:"top"},
+      h("div",{class:"brand"},h("span",{class:"logo"},icon("plane",18)),
+        h("div",null,h("div",{class:"name"},"FAREHUNTER"),h("div",{class:"sub"},"fare control · deep search"))),
+      h("div",{class:"banner"+(live?" live":"")},icon("info",13),
+        live?h("span",null,"Live mode — querying your proxy."):h("span",{html:"Prices are <b>simulated</b> for demo. Set <code>CONFIG</code> to go live."}))),
+    consoleEl(),
+    resultsEl(),
+    h("footer",{class:"foot"},"FareHunter · not a booking service"));
+}
+
+result=fetchFaresDemo(q);
+render();
+</script>
+</body>
+</html>
