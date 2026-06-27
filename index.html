@@ -229,7 +229,7 @@ async function fetchLive(q){
   const d=await res.json(); if(d.error) throw new Error(d.error);
 
   const r=fetchFaresDemo(q);          // structural skeleton (shape only)
-  r.live=true; r.liveNote="Live fares from Amadeus.";
+  r.live=true; r.liveNote="Live fares from Duffel.";
   const legs=q.roundTrip?2:1;
   const bagEach=q.checkedBag?55:0;    // Amadeus basic offers don't itemise bags — flat estimate
 
@@ -256,7 +256,7 @@ async function fetchLive(q){
   r.winner=r.splitTrue<=r.singleTrue
     ?{kind:"split",total:r.splitTrue,data:r.split}
     :{kind:"single",total:r.singleTrue,data:r.singleCarrier};
-  if(q.checkedBag)r.liveNote="Live fares from Amadeus · checked-bag fee is a flat $55/leg estimate (basic offers don't itemise bags).";
+  if(q.checkedBag)r.liveNote="Live fares from Duffel · checked-bag fee is a flat $55/leg estimate (basic offers don't itemise bags).";
   return r;
 }
 async function fetchFares(q){
