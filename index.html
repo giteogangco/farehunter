@@ -146,12 +146,23 @@ const METROS={
   LAX:["LAX","BUR","LGB","SNA"],BUR:["LAX","BUR","LGB","SNA"],SNA:["LAX","BUR","LGB","SNA"],
   SFO:["SFO","OAK","SJC"],OAK:["SFO","OAK","SJC"],SJC:["SFO","OAK","SJC"],
   ORD:["ORD","MDW"],MDW:["ORD","MDW"],NRT:["NRT","HND"],HND:["NRT","HND"],
-  CDG:["CDG","ORY","BVA"],ORY:["CDG","ORY","BVA"]
+  CDG:["CDG","ORY","BVA"],ORY:["CDG","ORY","BVA"],
+  MNL:["MNL","CRK","SGL"],CRK:["MNL","CRK","SGL"],SGL:["MNL","CRK","SGL"],
+  MPH:["MPH","KLO"],KLO:["MPH","KLO"]
 };
 const CITY={JFK:"New York",EWR:"Newark",LGA:"New York",LHR:"London",LGW:"London",STN:"London",LTN:"London",
   LAX:"Los Angeles",BUR:"Burbank",LGB:"Long Beach",SNA:"Santa Ana",SFO:"San Francisco",OAK:"Oakland",
   SJC:"San Jose",ORD:"Chicago",MDW:"Chicago",NRT:"Tokyo",HND:"Tokyo",CDG:"Paris",ORY:"Paris",BVA:"Beauvais",
-  DXB:"Dubai",SIN:"Singapore",BKK:"Bangkok",BCN:"Barcelona",AMS:"Amsterdam",MAD:"Madrid",FCO:"Rome",IST:"Istanbul",DEL:"Delhi",SYD:"Sydney"};
+  DXB:"Dubai",SIN:"Singapore",BKK:"Bangkok",BCN:"Barcelona",AMS:"Amsterdam",MAD:"Madrid",FCO:"Rome",IST:"Istanbul",DEL:"Delhi",SYD:"Sydney",
+  MNL:"Manila",CRK:"Clark",CEB:"Cebu",DVO:"Davao",ILO:"Iloilo",KLO:"Kalibo",LAO:"Laoag",PPS:"Puerto Princesa",
+  BCD:"Bacolod",DRP:"Legazpi",TAG:"Bohol",BXU:"Butuan",CYZ:"Cauayan",CBO:"Cotabato",TAC:"Tacloban",DPL:"Dipolog",
+  DGT:"Dumaguete",GES:"General Santos",MPH:"Caticlan",OZC:"Ozamiz",CGY:"Cagayan de Oro",WNP:"Naga",PAG:"Pagadian",
+  RXS:"Roxas",TWT:"Tawi-Tawi",SJI:"San Jose (Mindoro)",SFS:"Subic Bay",TUG:"Tuguegarao",ZAM:"Zamboanga",
+  BSO:"Basco",CYP:"Calbayog",CGM:"Camiguin",CRM:"Catarman",CYU:"Cuyo",EUQ:"Antique",USU:"Coron",JOL:"Jolo",
+  BAG:"Baguio",MRQ:"Marinduque",MBT:"Masbate",OMC:"Ormoc",SGL:"Sangley Point",SWL:"San Vicente",IAO:"Siargao",
+  SUG:"Surigao",TDG:"Tandag",TBH:"Tablas",VRC:"Virac",AAV:"Allah Valley",DTE:"Daet",BPH:"Bislig",BPA:"Borongan",
+  CDY:"Mapun",IPE:"Ipil",BQA:"Baler",LBX:"Lubang",MLP:"Malabang",MBO:"Mamburao",IGN:"Iligan",MXI:"Mati",
+  SFE:"San Fernando",XSO:"Siocon",IQR:"Siquijor"};
 const KNOWN=Object.keys(CITY);
 const CARRIERS=[
   {code:"QZ",name:"Skylark",kind:"budget",bag:55,seat:18},
