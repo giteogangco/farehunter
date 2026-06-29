@@ -60,6 +60,8 @@ code{font-family:var(--mono);color:var(--teal);font-size:.9em;}
 @keyframes flap{from{transform:rotateX(-90deg);opacity:0}to{transform:rotateX(0);opacity:1}}
 .board-strat{color:var(--muted);font-size:13px;display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;}
 .pill{background:rgba(70,214,195,.14);color:var(--teal);font-size:11px;padding:3px 9px;border-radius:999px;}
+.book{display:inline-flex;align-items:center;gap:8px;margin-top:16px;background:linear-gradient(135deg,var(--amber),#e0991d);color:#1a1205;font-weight:700;font-family:var(--disp);padding:11px 20px;border-radius:11px;text-decoration:none;font-size:14px;}
+.book:hover{filter:brightness(1.05);}
 
 .grid{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:15px;border-left:3px solid var(--line);}
@@ -374,9 +376,13 @@ function resultsEl(){
   const strat=h("div",{class:"board-strat"},
     "via "+(r.winner.kind==="split"?"split ticketing":"single carrier")+" · "+r.bestPair.o+" → "+r.bestPair.d,
     r.bestPair.o!==q.from?h("span",{class:"pill"},"nearby airport"):null);
+  const _bo=r.bestPair?r.bestPair.o:q.from,_bd=r.bestPair?r.bestPair.d:q.to;
+  const _retQ=q.roundTrip?(" returning "+iso(r.ret)):"";
+  const _bookUrl="https://www.google.com/travel/flights?q="+encodeURIComponent("flights from "+_bo+" to "+_bd+" on "+q.depart+_retQ);
+  const bookLink=h("a",{class:"book",href:_bookUrl,target:"_blank",rel:"noopener"},icon("search",15),"Book "+_bo+" → "+_bd+" on Google Flights");
   frag.append(h("section",{class:"board",id:"board","aria-live":"polite"},
     h("div",{class:"board-tag"},icon("trend",14),"cheapest realistic total · "+q.pax+" traveller"+(q.pax>1?"s":"")+(q.roundTrip?" · round trip":" · one way")),
-    flap(Math.round(r.winner.total)),strat));
+    flap(Math.round(r.winner.total)),strat,bookLink));
   if(r.liveNote)frag.append(h("section",{class:"panel"},h("p",{class:"dim",style:"margin:0"},r.liveNote)));
   // insights
   const grid=h("section",{class:"grid"});
